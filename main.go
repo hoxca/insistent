@@ -26,9 +26,30 @@ var (
 	verbosityPtr    *string
 )
 
+type stringFlag struct {
+	set   bool
+	value string
+}
+
+func (sf *stringFlag) Set(x string) error {
+	sf.value = x
+	sf.set = true
+	return nil
+}
+
+func (sf *stringFlag) String() string {
+	return sf.value
+}
+
+func (sf *stringFlag) Split() []string {
+	return strings.Split(sf.value, ",")
+}
+
+var callees stringFlag
+
 func main() {
 
-	calleesPrt := flag.String("callees", "", "comma separated list of callee by order of call")
+	flag.Var(&callees, "callees", "comma separated list of callee by order of call")
 	verbosityPtr = flag.String("verbosity", "warn", "Log level (debug, info, warn, error)")
 	flag.Parse()
 
@@ -37,15 +58,11 @@ func main() {
 
 	sipProxy := viper.GetString("sipProxy")
 	numbers := viper.GetStringMap("callees")
-	callees := strings.Split(*calleesPrt, ",")
-
 	baresip.Path = viper.GetString("baresip.path")
 	baresip.Config = viper.GetString("baresip.config")
 	baresip.Mock = true
 
-	for c := range callees {
-		Log.Debugf("Call %s at number: %s", callees[c], numbers[callees[c]])
-	}
+	callees := sanityCheck(callees, numbers)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -64,14 +81,36 @@ func main() {
 	baresip.Close(cmd)
 }
 
-func readConfig() *viper.Viper {
+func sanityCheck(calleesFlag stringFlag, numbers map[string]interface{}) []string {
+	if len(calleesFlag.String()) == 0 {
+		flag.Usage()
+		fmt.Println("\nError: Please provide one or more callee name(s)")
+	}
+	callees := calleesFlag.Split()
+	var (
+		wrongMapping = false
+		errMsg       string
+	)
+	for c := range callees {
+		if numbers[callees[c]] == nil {
+			wrongMapping = true
+			errMsg = fmt.Sprintf("%s\nError: You must provide number mapping in configuration for callee: %s", errMsg, callees[c])
+		}
+		Log.Debugf("Call %s at number: %s", callees[c], numbers[callees[c]])
+	}
+	if wrongMapping {
+		flag.Usage()
+		fmt.Printf("%s", errMsg)
+	}
+	return callees
+}
 
+func readConfig() *viper.Viper {
 	v := viper.New()
 	dir, err := filepath.Abs(filepath.Dir(os.Args[0]))
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Println(dir)
 	confdir := fmt.Sprintf("%s/conf", dir)
 	// if we came from bin directory
 	confdir1 := fmt.Sprintf("%s/../conf", dir)
@@ -94,7 +133,6 @@ func readConfig() *viper.Viper {
 		Log.Debugf("Using config file: %s", v.ConfigFileUsed())
 	}
 	return v
-
 }
 
 func scanResult(cmd *exec.Cmd, pipe io.ReadCloser) {
