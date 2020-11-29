@@ -60,7 +60,7 @@ func main() {
 	numbers := viper.GetStringMap("callees")
 	baresip.Path = viper.GetString("baresip.path")
 	baresip.Config = viper.GetString("baresip.config")
-	baresip.Mock = true
+	baresip.Mock = false
 
 	callees := sanityCheck(callees, numbers)
 
@@ -156,6 +156,11 @@ func checkResult(result string) bool {
 	if strings.Contains(result, "terminated") {
 		fmt.Println("Call terminated !")
 		return false
+	}
+
+	if strings.Contains(result, "video stream is disabled") {
+		fmt.Println("Ok, Call answered!")
+		return true
 	}
 
 	if strings.Contains(result, "Call established") {
