@@ -158,7 +158,8 @@ func checkResult(result string) bool {
 		return false
 	}
 
-	if strings.Contains(result, "video stream is disabled") {
+	if strings.Contains(result, "session closed") {
+		// if 403 or answer on windows, can't do much !
 		fmt.Println("Ok, Call answered!")
 		return true
 	}
