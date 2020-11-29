@@ -88,7 +88,7 @@ func Launch(ctx context.Context) (*exec.Cmd, io.ReadCloser) {
 		cmd = exec.CommandContext(ctx, "/usr/bin/tail", "-500f", "data/data.txt")
 	}
 	if !Mock {
-		cmd = exec.CommandContext(ctx, "/usr/local/bin/baresip", "-f", "/Users/hugh/.baresip/")
+		cmd = exec.CommandContext(ctx, Path, "-f", Config)
 	}
 
 	pipe, err := cmd.StdoutPipe()
