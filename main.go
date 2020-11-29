@@ -128,6 +128,8 @@ func readConfig() *viper.Viper {
 		} else {
 			Log.Debug("Something look strange")
 			Log.Debugf("error: %v\n", err)
+			Log.Debugf("Using config file: %s", v.ConfigFileUsed())
+			os.Exit(1)
 		}
 	} else {
 		Log.Debugf("Using config file: %s", v.ConfigFileUsed())
