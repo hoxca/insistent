@@ -56,7 +56,7 @@ func Close(cmd *exec.Cmd) {
 // Call is a recursive function that make the call and repeat it, 3 times before hangup
 func Call(nc int, callee string, dialQuery string) {
 
-	fmt.Printf("Calling %s number:%d\n", callee, nc)
+	fmt.Printf("Calling %s iteration:%d\n", callee, nc)
 	baresipQuery := fmt.Sprintf("http://127.0.0.1:8000/?%s", url.QueryEscape(dialQuery))
 
 	if !Mock {
