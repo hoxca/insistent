@@ -9,6 +9,8 @@ import (
 	"os"
 	"os/exec"
 	"time"
+
+	Log "github.com/apatters/go-conlog"
 )
 
 // Mock activate the baresip mock
@@ -52,9 +54,9 @@ func Close(cmd *exec.Cmd) {
 }
 
 // Call is a recursive function that make the call and repeat it, 3 times before hangup
-func Call(nc int, dialQuery string) {
+func Call(nc int, callee string, dialQuery string) {
 
-	fmt.Printf("Calling %d !\n", nc)
+	fmt.Printf("Calling %s number:%d\n", callee, nc)
 	baresipQuery := fmt.Sprintf("http://127.0.0.1:8000/?%s", url.QueryEscape(dialQuery))
 
 	if !Mock {
@@ -71,18 +73,18 @@ func Call(nc int, dialQuery string) {
 		return
 	}
 	nc++
-	Call(nc, dialQuery)
+	Call(nc, callee, dialQuery)
 }
 
 // Launch function will start the baresip process
 func Launch(ctx context.Context) (*exec.Cmd, io.ReadCloser) {
 
-	fmt.Printf("baresip path: %s\n", Path)
-	fmt.Printf("baresip config: %s\n", Config)
+	Log.Debugf("baresip path: %s", Path)
+	Log.Debugf("baresip config: %s", Config)
 
 	var cmd *exec.Cmd
 	if Mock {
-		fmt.Println("Mocking")
+		Log.Debugf("Mocking call...")
 		cmd = exec.CommandContext(ctx, "/usr/bin/tail", "-500f", "data/data.txt")
 	}
 	if !Mock {
@@ -108,7 +110,7 @@ func waitForAnswer(iteration int) {
 	for range time.Tick(time.Second) {
 		count++
 		if count == 15 {
-			fmt.Println("Call timeout !")
+			fmt.Printf("Call timeout... ")
 			Hangup()
 			time.Sleep(5 * time.Second)
 			break

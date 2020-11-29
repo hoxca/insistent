@@ -4,4 +4,5 @@ tmp/
 .env
 data/
 insistent
+conf/
 
