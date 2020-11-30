@@ -152,7 +152,7 @@ func scanResult(cmd *exec.Cmd, pipe io.ReadCloser) {
 
 func checkResult(result string) bool {
 
-	fmt.Printf("%s\n", result)
+	Log.Debugf("%s", result)
 	if strings.Contains(result, "terminated") {
 		fmt.Println("Call terminated !")
 		return false
